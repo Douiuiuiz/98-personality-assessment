@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个性性格测评</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- Toast提示容器 -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ========== 欢迎页 ========== -->
+<div id="page-welcome" class="page active">
+  <div class="welcome-container">
+    <h1 class="welcome-title">个性性格测评</h1>
+    <p class="welcome-subtitle">基于大五人格模型的四点评分测评 · 60题 · 约15分钟</p>
+
+    <!-- 结果示例 -->
+    <div class="welcome-preview">
+      <div class="preview-header">
+        <span class="preview-badge">📊 测评结果示例</span>
+        <span class="preview-note">完成测评后你将获得类似下方的完整报告</span>
+      </div>
+      <div class="preview-grid">
+        <div class="preview-main">
+          <div class="preview-type">🏷️ 开拓者 · 分析师</div>
+          <div class="preview-summary">你的核心特质是：有强烈的成就动机、善于理性分析、执行力和责任感强。</div>
+          <div class="preview-aspects">
+            <div class="preview-aspect"><span class="pa-label">抱负能量</span><span class="pa-bar"><span class="pa-fill" style="width:72%;background:#EF4444"></span></span><span class="pa-score" style="color:#EF4444">72</span></div>
+            <div class="preview-aspect"><span class="pa-label">思维模式</span><span class="pa-bar"><span class="pa-fill" style="width:68%;background:#3B82F6"></span></span><span class="pa-score" style="color:#3B82F6">68</span></div>
+            <div class="preview-aspect"><span class="pa-label">情绪适应</span><span class="pa-bar"><span class="pa-fill" style="width:55%;background:#10B981"></span></span><span class="pa-score" style="color:#10B981">55</span></div>
+            <div class="preview-aspect"><span class="pa-label">人际互动</span><span class="pa-bar"><span class="pa-fill" style="width:48%;background:#F59E0B"></span></span><span class="pa-score" style="color:#F59E0B">48</span></div>
+            <div class="preview-aspect"><span class="pa-label">任务执行</span><span class="pa-bar"><span class="pa-fill" style="width:76%;background:#8B5CF6"></span></span><span class="pa-score" style="color:#8B5CF6">76</span></div>
+          </div>
+        </div>
+        <div class="preview-side">
+          <div class="preview-company-title">🏢 互联网大厂匹配度</div>
+          <div class="preview-company-list">
+            <div class="preview-company"><span>字节跳动</span><span style="color:#10B981">89%</span></div>
+            <div class="preview-company"><span>腾讯</span><span style="color:#10B981">82%</span></div>
+            <div class="preview-company"><span>阿里巴巴</span><span style="color:#F59E0B">74%</span></div>
+            <div class="preview-company"><span>美团</span><span style="color:#F59E0B">68%</span></div>
+            <div class="preview-company"><span style="font-size:12px;color:#94A3B8">...等12家互联网大厂</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="preview-features">
+        <span>📋 30维度人格画像</span>
+        <span>📊 五大方面雷达图</span>
+        <span>🏢 12家互联网大厂匹配</span>
+        <span>💡 个性化发展建议</span>
+      </div>
+    </div>
+
+    <!-- 测评说明 -->
+    <div class="welcome-info">
+      <p><strong>📋 测评说明</strong></p>
+      <ul>
+        <li>共 <strong>60</strong> 道题，每题一条行为描述</li>
+        <li>从<em>最不符合、较不符合、较符合、最符合</em>中四选一</li>
+        <li>基于大五人格模型，评估 30 个性格维度</li>
+        <li>支持键盘快捷键：数字键 1-4 直接选择，← → 切换题目</li>
+        <li>数据仅存储在本地浏览器，不会上传</li>
+      </ul>
+    </div>
+
+    <button class="btn-primary btn-large" onclick="App.startAssessment()">开始测评</button>
+    <p class="welcome-resume" id="resume-hint" style="display:none">
+      检测到未完成的测评，<a href="javascript:App.resumeAssessment()">点击继续</a>
+    </p>
+  </div>
+</div>
+
+<!-- ========== 测评页 ========== -->
+<div id="page-assessment" class="page">
+  <!-- 顶部栏 -->
+  <div class="assess-topbar">
+    <span class="assess-title">个性性格测评</span>
+    <div class="assess-progress-wrap">
+      <div class="assess-progress-bar" id="progress-bar"></div>
+    </div>
+    <span class="assess-counter" id="question-counter">1/60</span>
+    <span class="assess-timer">⏱ <span id="timer-text">45:00</span></span>
+  </div>
+
+  <!-- 进度指示器 -->
+  <div class="progress-dots" id="progress-dots"></div>
+
+  <!-- 操作提示 -->
+  <div class="assess-instruction">请根据实际情况，选择最符合你的选项</div>
+
+  <!-- 主体：单栏居中布局 -->
+  <div class="assess-main">
+    <div class="question-area">
+      <div class="question-number">第 <span id="q-current">1</span> / 60 题</div>
+      <div class="question-text" id="question-text"></div>
+      <div class="options-row">
+        <button class="option-btn" data-value="1" onclick="App.selectOption(1)">
+          <span class="option-num">1</span>
+          <span class="option-label">最不符合</span>
+        </button>
+        <button class="option-btn" data-value="2" onclick="App.selectOption(2)">
+          <span class="option-num">2</span>
+          <span class="option-label">较不符合</span>
+        </button>
+        <button class="option-btn" data-value="3" onclick="App.selectOption(3)">
+          <span class="option-num">3</span>
+          <span class="option-label">较符合</span>
+        </button>
+        <button class="option-btn" data-value="4" onclick="App.selectOption(4)">
+          <span class="option-num">4</span>
+          <span class="option-label">最符合</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部导航 -->
+  <div class="assess-footer">
+    <button class="btn-prev" id="btn-prev" onclick="App.goToPrev()">上一题</button>
+    <div class="assess-footer-spacer"></div>
+    <button class="btn-next" id="btn-next" onclick="App.nextQuestion()" disabled>下一题</button>
+  </div>
+</div>
+
+<!-- ========== 报告页 ========== -->
+<div id="page-report" class="page">
+  <div class="report-container">
+
+    <!-- AI免责声明 -->
+    <div class="report-disclaimer">
+      ⚠️ 本报告由 AI 生成，仅供个人参考，不构成任何职业建议或企业录用依据。
+    </div>
+
+    <div class="report-header">
+      <h1 class="report-title">你的职业性格画像</h1>
+      <div class="report-type-badge" id="report-type-badge"></div>
+      <p class="report-summary" id="report-summary"></p>
+    </div>
+
+    <div class="report-aspects" id="report-aspects"></div>
+
+    <div class="report-chart-section">
+      <h2>五大方面雷达图</h2>
+      <div class="chart-container"><canvas id="radar-chart"></canvas></div>
+    </div>
+
+    <div class="report-section">
+      <h2>详细维度解读</h2>
+      <div id="report-aspect-details"></div>
+    </div>
+
+    <div class="report-section">
+      <h2>互联网大厂偏好匹配度</h2>
+      <div class="company-cards" id="company-cards"></div>
+    </div>
+
+    <div class="report-section">
+      <h2>作答可信度</h2>
+      <div class="consistency-card" id="consistency-card"></div>
+    </div>
+
+    <div class="report-section">
+      <h2>个人发展建议</h2>
+      <div id="advice-list"></div>
+    </div>
+
+    <div class="report-section">
+      <h2>📝 测评答题小贴士</h2>
+      <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px">这些技巧可以帮助你更好地理解和应对类似的企业性格测评</p>
+      <div id="tips-list"></div>
+    </div>
+
+    <!-- 底部免责声明 -->
+    <div class="report-disclaimer-bottom">
+      ⚠️ 本报告由 AI 生成，仅供个人参考，不构成任何职业建议或企业录用依据。测评数据仅存储在本地浏览器，不会上传至任何服务器。
+    </div>
+
+    <div class="report-actions">
+      <button class="btn-primary" onclick="App.restart()">重新测评</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/scoring.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
